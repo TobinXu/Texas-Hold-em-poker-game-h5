@@ -1,0 +1,12 @@
+{
+  "name": "texas-holdem",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm run /dev:/",
+    "dev:client": "pnpm --filter client dev",
+    "dev:server": "pnpm --filter server dev",
+    "build:client": "pnpm --filter client build",
+    "build:server": "pnpm --filter server build",
+    "deploy": "pnpm --filter server deploy"
+  }
+}

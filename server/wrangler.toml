@@ -1,0 +1,11 @@
+name = "texas-holdem"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[durable_objects]
+bindings = [{ name = "ROOM", class_name = "RoomDO" }]
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RoomDO"]
