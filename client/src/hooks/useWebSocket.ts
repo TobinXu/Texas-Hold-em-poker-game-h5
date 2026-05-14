@@ -9,8 +9,8 @@ const MAX_RECONNECT_DELAY = 30000;
 
 export function useWebSocket(roomId: string) {
   const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
-  const heartbeatRef = useRef<ReturnType<typeof setInterval>>();
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const heartbeatRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const reconnectDelayRef = useRef(RECONNECT_DELAY);
   const mountedRef = useRef(true);
   const prevPhaseRef = useRef<string>('');
