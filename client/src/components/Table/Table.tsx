@@ -1,27 +1,27 @@
 import type { GamePublicState, PlayerPublicState } from '@shared/types';
 import Seat from './Seat';
 import CommunityCards from '../Cards/CommunityCards';
+import Card from '../Cards/Card';
 import { useGameStore } from '../../store/gameStore';
 
 interface TableProps {
   gameState: GamePublicState | null;
 }
 
-// Position seats in an ellipse around the table
-function getSeatTransform(seatIndex: number, totalSeats: number): React.CSSProperties {
-  const angle = (seatIndex / totalSeats) * 2 * Math.PI - Math.PI / 2;
-  const radiusX = 140; // horizontal radius
-  const radiusY = 100; // vertical radius
-  const x = Math.cos(angle) * radiusX;
-  const y = Math.sin(angle) * radiusY;
-
-  return {
-    position: 'absolute',
-    left: '50%',
-    top: '50%',
-    transform: `translate(calc(-50% + ${x}px), calc(-50% + ${y}px))`,
-  };
-}
+// Custom seat positions for better mobile layout
+// 0 = bottom (my spot), 1-8 going clockwise left → top → right
+// This way you always see your seat at the bottom on mobile
+const SEAT_POSITIONS: { x: number; y: number }[] = [
+  { x: 0, y: 130 },    // 0: bottom center (my seat usually here)
+  { x: -90, y: 100 },  // 1: bottom-left
+  { x: -140, y: 50 },  // 2: left-middle
+  { x: -120, y: -30 }, // 3: top-left
+  { x: -40, y: -80 },  // 4: top-left-center
+  { x: 40, y: -80 },   // 5: top-right-center
+  { x: 120, y: -30 },  // 6: top-right
+  { x: 140, y: 50 },   // 7: right-middle
+  { x: 90, y: 100 },   // 8: bottom-right
+];
 
 export default function Table({ gameState }: TableProps) {
   const myId = useGameStore(s => s.myId);
@@ -33,67 +33,72 @@ export default function Table({ gameState }: TableProps) {
   const dealerIndex = gameState?.dealerIndex ?? -1;
   const activePlayerIndex = gameState?.activePlayerIndex ?? -1;
 
-  // Pad to 9 seats for consistent layout
+  // Reorder seats to keep my seat at bottom on mobile
+  const mySeatIndex = players.find(p => p.id === myId)?.seatIndex ?? 0;
   const allSeats: (PlayerPublicState | null)[] = Array(9).fill(null);
   for (const p of players) {
-    if (p.seatIndex < 9) {
-      allSeats[p.seatIndex] = p;
-    }
+    // We already use 0-9 indices from server, just render at custom positions
+    allSeats[p.seatIndex] = p;
   }
 
   return (
-    <div className="relative w-full max-w-md mx-auto" style={{ aspectRatio: '4/3' }}>
-      {/* Table felt */}
-      <div className="absolute inset-4 rounded-[50%] bg-gradient-to-b from-green-800 to-green-900 border-4 border-amber-900/60 shadow-2xl">
-        {/* Table pattern */}
-        <div className="absolute inset-3 rounded-[50%] border border-green-700/50" />
+    <div className="relative w-full max-w-lg mx-auto pb-16" style={{ aspectRatio: '4/3' }}>
+      {/* Table felt background */}
+      <div className="absolute inset-0 -top-4 rounded-[50%] bg-gradient-to-br from-[#0f7037] via-[#0d5e2e] to-[#094020] border-[6px] border-amber-800/70 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
+        {/* Subtle texture overlay */}
+        <div className="absolute inset-3 rounded-[50%] border-2 border-green-300/15 bg-green-400/[0.03]" />
       </div>
 
-      {/* Community cards */}
-      <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10">
-        <CommunityCards cards={communityCards} />
+      {/* Community cards container */}
+      <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 z-10">
+        <div className="bg-black/30 px-4 py-2 rounded-2xl backdrop-blur-sm">
+          <div className="text-[10px] text-yellow-200/80 mb-1 text-center uppercase tracking-wide font-medium">公共牌</div>
+          <CommunityCards cards={communityCards} />
+        </div>
       </div>
 
-      {/* Pot */}
+      {/* Pot display */}
       {pot > 0 && (
-        <div className="absolute left-1/2 top-[38%] -translate-x-1/2 z-10">
-          <div className="bg-black/40 text-yellow-400 text-sm font-bold px-3 py-1 rounded-full">
-            底池 ${pot}
+        <div className="absolute left-1/2 top-[25%] -translate-x-1/2 z-10">
+          <div className="bg-gradient-to-r from-amber-900/80 to-amber-800/80 text-yellow-300 px-5 py-2 rounded-full shadow-lg border border-amber-600/50 backdrop-blur-sm">
+            <div className="text-sm font-bold tracking-wide">底池 ${pot}</div>
           </div>
         </div>
       )}
 
       {/* Seats */}
-      {allSeats.map((player, i) => (
-        <div key={i} style={getSeatTransform(i, 9)}>
-          <Seat
-            player={player}
-            isDealer={gameState ? i === dealerIndex : false}
-            isActive={gameState ? i === activePlayerIndex : false}
-            isMe={player?.id === myId}
-            seatIndex={i}
-            totalSeats={9}
-          />
-        </div>
-      ))}
+      {allSeats.map((player, i) => {
+        const pos = SEAT_POSITIONS[i];
+        return (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `calc(50% + ${pos.x}px)`,
+              top: `calc(50% + ${pos.y}px)`,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            <Seat
+              player={player}
+              isDealer={gameState ? (dealerIndex === i) : false}
+              isActive={gameState ? (activePlayerIndex === i) : false}
+              isMe={player?.id === myId}
+              seatIndex={i}
+              totalSeats={9}
+            />
+          </div>
+        );
+      })}
 
-      {/* My hand (displayed at bottom, separate from seat) */}
+      {/* My hand - LARGE at bottom center (outside table circle) */}
       {myHand.length > 0 && (
-        <div className="absolute left-1/2 bottom-2 -translate-x-1/2 z-20">
-          <div className="bg-black/50 rounded-xl px-3 py-2">
-            <div className="text-center text-xs text-gray-400 mb-1">我的手牌</div>
-            <div className="flex gap-1.5">
-              {myHand.map((card, i) => (
-                <div key={i} className="w-10 h-14 rounded bg-[#f5f5f0] border border-gray-300 flex flex-col items-center justify-center shadow-lg font-bold text-sm">
-                  <span className="leading-none">
-                    {['2','3','4','5','6','7','8','9','10','J','Q','K','A'][card % 13]}
-                  </span>
-                  <span className="text-base leading-none">
-                    {['♠','♥','♦','♣'][Math.floor(card / 13)]}
-                  </span>
-                </div>
-              ))}
-            </div>
+        <div className="absolute left-1/2 bottom-[-10px] -translate-x-1/2 z-20 bg-gradient-to-b from-black/70 to-black/80 rounded-2xl px-5 py-3 backdrop-blur-md border border-white/10 shadow-2xl">
+          <div className="text-center text-xs text-yellow-200/80 mb-2 uppercase tracking-wide font-medium">我的手牌</div>
+          <div className="flex gap-3">
+            {myHand.map((card, i) => (
+              <Card key={i} card={card} />
+            ))}
           </div>
         </div>
       )}

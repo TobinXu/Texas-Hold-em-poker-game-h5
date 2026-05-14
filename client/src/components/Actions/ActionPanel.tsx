@@ -15,8 +15,8 @@ export default function ActionPanel({ gameState, onAction }: ActionPanelProps) {
 
   if (!gameState || !isMyTurn) {
     return (
-      <div className="w-full px-4 py-3">
-        <div className="text-center text-gray-500 text-sm">
+      <div className="w-full px-4 py-4 bg-black/80 backdrop-blur-sm border-t border-gray-700">
+        <div className="text-center text-gray-400 text-sm">
           {gameState ? '等待其他玩家操作...' : ''}
         </div>
       </div>
@@ -28,10 +28,11 @@ export default function ActionPanel({ gameState, onAction }: ActionPanelProps) {
 
   const canCheck = gameState.currentBet === myPlayer.currentBet;
   const callAmount = Math.min(gameState.currentBet - myPlayer.currentBet, myPlayer.chips);
-  const minRaise = gameState.currentBet * 2;
+  const minRaise = Math.max(gameState.currentBet * 2, gameState.currentBet + gameState.currentBet);
   const maxRaise = myPlayer.chips + myPlayer.currentBet;
   const canRaise = myPlayer.chips > callAmount;
 
+  // Initialize raise amount
   if (raiseAmount === 0 && canRaise) {
     setRaiseAmount(minRaise);
   }
@@ -42,17 +43,19 @@ export default function ActionPanel({ gameState, onAction }: ActionPanelProps) {
   };
 
   return (
-    <div className="w-full px-3 py-2 bg-gray-900/90 backdrop-blur-sm border-t border-gray-700">
+    <div className="w-full px-4 py-4 bg-gradient-to-b from-black/80 to-black/90 backdrop-blur-md border-t border-gray-700">
       {/* Timer indicator */}
-      <div className="w-full h-1 bg-gray-700 rounded-full mb-2 overflow-hidden">
-        <div className="h-full bg-yellow-400 rounded-full animate-[shrink_30s_linear]" />
-      </div>
+      {isMyTurn && (
+        <div className="w-full h-2 bg-gray-700 rounded-full mb-3 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-yellow-400 to-yellow-300 rounded-full animate-[shrink_30s_linear]" />
+        </div>
+      )}
 
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-3 items-center">
         {/* Fold */}
         <button
           onClick={() => handleAction('fold')}
-          className="flex-1 py-3 rounded-xl bg-red-600 hover:bg-red-500 active:bg-red-700 text-white font-bold text-sm transition-colors"
+          className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 active:scale-95 text-white font-bold text-base shadow-lg transition-all"
         >
           弃牌
         </button>
@@ -61,14 +64,14 @@ export default function ActionPanel({ gameState, onAction }: ActionPanelProps) {
         {canCheck ? (
           <button
             onClick={() => handleAction('check')}
-            className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-sm transition-colors"
+            className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-95 text-white font-bold text-base shadow-lg transition-all"
           >
             过牌
           </button>
         ) : (
           <button
             onClick={() => handleAction('call')}
-            className="flex-1 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 active:bg-blue-700 text-white font-bold text-sm transition-colors"
+            className="flex-1 py-4 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 active:scale-95 text-white font-bold text-base shadow-lg transition-all"
           >
             跟注 ${callAmount}
           </button>
@@ -76,10 +79,10 @@ export default function ActionPanel({ gameState, onAction }: ActionPanelProps) {
 
         {/* Raise */}
         {canRaise && (
-          <div className="flex-1 flex flex-col gap-1">
+          <div className="flex-1 flex flex-col gap-2">
             <button
               onClick={() => handleAction('raise', raiseAmount)}
-              className="py-3 rounded-xl bg-green-600 hover:bg-green-500 active:bg-green-700 text-white font-bold text-sm transition-colors"
+              className="py-4 rounded-2xl bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 active:scale-95 text-white font-bold text-base shadow-lg transition-all"
             >
               加注 ${raiseAmount}
             </button>
@@ -87,9 +90,10 @@ export default function ActionPanel({ gameState, onAction }: ActionPanelProps) {
               type="range"
               min={minRaise}
               max={maxRaise}
+              step={5}
               value={raiseAmount}
               onChange={e => setRaiseAmount(Number(e.target.value))}
-              className="w-full h-1 accent-green-500"
+              className="w-full h-2 accent-green-500"
             />
           </div>
         )}
@@ -97,7 +101,7 @@ export default function ActionPanel({ gameState, onAction }: ActionPanelProps) {
         {/* All In */}
         <button
           onClick={() => handleAction('all_in')}
-          className="py-3 px-4 rounded-xl bg-yellow-600 hover:bg-yellow-500 active:bg-yellow-700 text-white font-bold text-sm transition-colors whitespace-nowrap"
+          className="px-5 py-4 rounded-2xl bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-500 hover:to-orange-400 active:scale-95 text-white font-bold text-base shadow-lg transition-all whitespace-nowrap"
         >
           ALL IN
         </button>

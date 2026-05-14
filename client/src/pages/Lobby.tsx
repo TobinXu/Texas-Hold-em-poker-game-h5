@@ -7,7 +7,7 @@ const API_BASE = '/api';
 
 export default function Lobby() {
   const navigate = useNavigate();
-  const { myId, setMyId, myName, setMyName } = useGameStore();
+  const { myId, myName, setMyName } = useGameStore();
 
   const [nameInput, setNameInput] = useState(myName);
   const [roomInput, setRoomInput] = useState('');
@@ -15,20 +15,15 @@ export default function Lobby() {
   const [joining, setJoining] = useState(false);
   const [error, setError] = useState('');
 
-  const handleSetName = () => {
-    if (nameInput.trim()) {
-      setMyName(nameInput.trim());
-    }
-  };
-
   const handleCreateRoom = async () => {
     sounds.click();
-    if (!myName.trim()) {
+    if (!nameInput.trim()) {
       setError('请先输入昵称');
       return;
     }
     setCreating(true);
     setError('');
+    setMyName(nameInput.trim());
 
     try {
       const res = await fetch(`${API_BASE}/rooms`, { method: 'POST' });
@@ -43,7 +38,7 @@ export default function Lobby() {
 
   const handleJoinRoom = async () => {
     sounds.click();
-    if (!myName.trim()) {
+    if (!nameInput.trim()) {
       setError('请先输入昵称');
       return;
     }
@@ -53,6 +48,7 @@ export default function Lobby() {
     }
     setJoining(true);
     setError('');
+    setMyName(nameInput.trim());
 
     try {
       const res = await fetch(`${API_BASE}/rooms/${roomInput.trim().toUpperCase()}`);
@@ -69,62 +65,59 @@ export default function Lobby() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-b from-[#1a1a2e] to-[#16213e]">
+    <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-gradient-to-br from-[#0f172a] via-[#1a1a2e] to-[#16213e]">
       {/* Logo */}
       <div className="mb-10 text-center">
-        <div className="text-6xl mb-2">♠♥</div>
-        <h1 className="text-4xl font-bold text-yellow-400 mb-2">德州扑克</h1>
+        <div className="text-7xl mb-3 drop-shadow-lg">♠♥</div>
+        <h1 className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-600 mb-3">德州扑克</h1>
         <p className="text-gray-400 text-sm">与好友一起在线对战</p>
       </div>
 
       {/* Name input */}
       <div className="w-full max-w-xs mb-6">
-        <label className="block text-sm text-gray-400 mb-1">你的昵称</label>
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={nameInput}
-            onChange={e => setNameInput(e.target.value)}
-            onBlur={handleSetName}
-            placeholder="输入昵称..."
-            maxLength={12}
-            className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400"
-          />
-        </div>
+        <label className="block text-sm text-gray-300 mb-2 font-medium">你的昵称</label>
+        <input
+          type="text"
+          value={nameInput}
+          onChange={e => setNameInput(e.target.value)}
+          placeholder="输入昵称..."
+          maxLength={12}
+          className="w-full bg-slate-800/80 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition-all"
+        />
       </div>
 
       {/* Create room */}
       <button
         onClick={handleCreateRoom}
         disabled={creating}
-        className="w-full max-w-xs py-3 mb-4 rounded-xl bg-gradient-to-r from-green-600 to-green-500 hover:from-green-500 hover:to-green-400 text-white font-bold text-lg disabled:opacity-50 transition-all active:scale-95"
+        className="w-full max-w-xs py-4 mb-4 rounded-2xl bg-gradient-to-r from-green-600 to-emerald-500 hover:from-green-500 hover:to-emerald-400 text-white font-bold text-xl disabled:opacity-50 transition-all active:scale-95 shadow-xl"
       >
         {creating ? '创建中...' : '创建房间'}
       </button>
 
       {/* Divider */}
-      <div className="flex items-center w-full max-w-xs my-4">
-        <div className="flex-1 h-px bg-gray-700" />
-        <span className="px-3 text-gray-500 text-sm">或</span>
-        <div className="flex-1 h-px bg-gray-700" />
+      <div className="flex items-center w-full max-w-xs my-5">
+        <div className="flex-1 h-px bg-slate-700" />
+        <span className="px-4 text-slate-500 text-sm">或</span>
+        <div className="flex-1 h-px bg-slate-700" />
       </div>
 
       {/* Join room */}
-      <div className="w-full max-w-xs">
-        <label className="block text-sm text-gray-400 mb-1">房间号</label>
-        <div className="flex gap-2">
+      <div className="w-full max-w-xs mb-2">
+        <label className="block text-sm text-gray-300 mb-2 font-medium">房间号</label>
+        <div className="flex gap-3">
           <input
             type="text"
             value={roomInput}
             onChange={e => setRoomInput(e.target.value.toUpperCase())}
             placeholder="输入6位房间号"
             maxLength={6}
-            className="flex-1 bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 uppercase tracking-widest text-center font-mono text-lg"
+            className="flex-1 bg-slate-800/80 border border-slate-600 rounded-xl px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-yellow-400 focus:ring-2 focus:ring-yellow-400/20 transition-all uppercase tracking-widest text-center font-mono text-lg"
           />
           <button
             onClick={handleJoinRoom}
             disabled={joining}
-            className="px-6 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold disabled:opacity-50 transition-colors active:scale-95"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold disabled:opacity-50 transition-all active:scale-95 shadow-lg"
           >
             {joining ? '...' : '加入'}
           </button>
@@ -133,12 +126,14 @@ export default function Lobby() {
 
       {/* Error */}
       {error && (
-        <div className="mt-4 text-red-400 text-sm">{error}</div>
+        <div className="mt-4 text-red-400 text-sm bg-red-900/20 px-4 py-2 rounded-lg">
+          {error}
+        </div>
       )}
 
       {/* Info */}
-      <div className="mt-10 text-center text-gray-600 text-xs">
-        <p>Powered by Cloudflare Workers</p>
+      <div className="mt-12 text-center text-slate-600 text-xs">
+        <p>Powered by Cloudflare Workers + Durable Objects</p>
       </div>
     </div>
   );
