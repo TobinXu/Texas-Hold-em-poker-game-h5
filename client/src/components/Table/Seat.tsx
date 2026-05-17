@@ -1,4 +1,5 @@
 import type { PlayerPublicState } from '@shared/types';
+import Card from '../Cards/Card';
 
 interface SeatProps {
   player: PlayerPublicState | null;
@@ -6,64 +7,75 @@ interface SeatProps {
   isActive: boolean;
   isMe: boolean;
   seatIndex: number;
-  totalSeats: number;
+  showCards?: boolean;
 }
 
-export default function Seat({ player, isDealer, isActive, isMe, seatIndex }: SeatProps) {
+export default function Seat({ player, isDealer, isActive, isMe, seatIndex, showCards }: SeatProps) {
   if (!player) {
     return (
-      <div className="w-16 h-16 rounded-full border-2 border-dashed border-gray-300/30 flex items-center justify-center opacity-40 bg-black/20">
-        <span className="text-xs text-gray-400">空位</span>
+      <div className="flex flex-col items-center w-[72px]">
+        <div className="w-[72px] h-[52px] rounded-lg bg-black/20 border border-white/[0.04]" />
       </div>
     );
   }
 
+  const isFolded = player.isFolded;
+
   return (
-    <div className={`relative flex flex-col items-center gap-1 ${isActive ? 'scale-110' : ''} transition-transform duration-200`}>
+    <div className="relative flex flex-col items-center w-[72px]">
+      {/* Cards above seat (for other players) */}
+      {!isMe && player.cardCount === 2 && !isFolded && (
+        <div className="flex gap-0.5 mb-0.5" style={{ transform: 'translateY(4px)' }}>
+          <Card card={0} faceDown small />
+          <Card card={0} faceDown small style={{ marginLeft: -8 }} />
+        </div>
+      )}
+
       {/* Dealer button */}
       {isDealer && (
-        <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-yellow-400 to-amber-500 text-black text-[10px] font-bold rounded-full flex items-center justify-center z-10 shadow-md">
+        <div className="absolute -left-2 top-1/2 -translate-y-1/2 z-20 w-5 h-5 bg-white rounded-full flex items-center justify-center text-[10px] font-black text-black shadow-md">
           D
         </div>
       )}
 
-      {/* Avatar */}
-      <div className={`
-        w-14 h-14 rounded-full flex items-center justify-center text-lg font-bold shadow-lg
-        ${player.isFolded ? 'bg-gray-700 opacity-50 saturate-0' : ''}
-        ${player.isAllIn ? 'bg-gradient-to-br from-red-700 to-red-500' : ''}
-        ${isActive ? 'ring-3 ring-yellow-400 bg-gradient-to-br from-green-700 to-green-500' : 'bg-gradient-to-br from-gray-700 to-gray-600'}
-        ${!player.isOnline ? 'opacity-40 saturate-0' : ''}
-        ${isMe ? 'ring-2 ring-blue-400' : ''}
-      `}>
-        {player.name.charAt(0).toUpperCase()}
+      {/* Seat panel */}
+      <div
+        className={`w-[72px] rounded-lg overflow-hidden ${isActive && !isFolded ? 'ring-1 ring-yellow-400/60' : ''}`}
+        style={{
+          background: 'rgba(20, 20, 25, 0.85)',
+          border: '1px solid rgba(255, 255, 255, 0.08)',
+        }}
+      >
+        {/* Avatar placeholder */}
+        <div className="flex justify-center pt-1.5 pb-0.5">
+          <div
+            className={`w-8 h-8 rounded-full flex items-center justify-center ${isFolded ? 'bg-gray-700 opacity-50' : 'bg-gray-600'}`}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-gray-400">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              <circle cx="12" cy="7" r="4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </div>
+        </div>
+
+        {/* Name */}
+        <div className={`text-[9px] text-center font-medium truncate px-1 ${isMe ? 'text-yellow-300' : 'text-white/80'} ${isFolded ? 'opacity-40' : ''}`}>
+          {player.name}
+        </div>
+
+        {/* Chips */}
+        <div className={`text-[9px] text-center pb-1 font-mono ${isFolded ? 'text-gray-600' : 'text-emerald-400'}`}>
+          {player.isAllIn && !isFolded ? 'ALL IN' : `$${player.chips}`}
+        </div>
       </div>
 
-      {/* Name and chips */}
-      <div className="text-center bg-black/60 backdrop-blur-sm px-2 py-1 rounded-lg">
-        <div className={`text-xs font-medium text-white/90 truncate max-w-20 ${isMe ? 'text-yellow-300' : ''}`}>
-          {player.name}{isMe ? ' (你)' : ''}
-        </div>
-        <div className={`text-xs ${player.chips <= 0 ? 'text-red-400' : 'text-green-300'}`}>
-          {player.isAllIn ? (
-            <span className="font-bold text-red-300">ALL IN</span>
-          ) : (
-            `$${player.chips}`
-          )}
-        </div>
-      </div>
-
-      {/* Current bet indicator */}
-      {player.currentBet > 0 && (
-        <div className="absolute -bottom-4 bg-yellow-500 text-black text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md">
-          ${player.currentBet}
-        </div>
-      )}
-
-      {/* Folded overlay */}
-      {player.isFolded && !player.isFolded && (
-        <div className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full">
-          <span className="text-red-400 text-xs font-bold bg-black/60 px-2 py-1 rounded">弃牌</span>
+      {/* Current bet - shown as red chip + amount near seat */}
+      {player.currentBet > 0 && !isFolded && (
+        <div className="absolute -right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 z-10">
+          <div className="w-3.5 h-3.5 rounded-full bg-red-600 border border-red-400 shadow-sm" />
+          <span className="text-[9px] text-white font-bold whitespace-nowrap" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+            ${player.currentBet}
+          </span>
         </div>
       )}
     </div>

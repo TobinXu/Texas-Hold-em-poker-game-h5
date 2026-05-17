@@ -47,6 +47,19 @@ export const DEFAULT_CONFIG: RoomConfig = {
   bigBlind: 10,
 };
 
+// --- Room State (server internal) ---
+export interface RoomState {
+  roomId: string;
+  hostId: string;
+  createdAt: number;
+  status: RoomStatus;
+  players: Map<string, PlayerState>;
+  maxPlayers: number;
+  minPlayers: number;
+  game: GameState | null;
+  config: RoomConfig;
+}
+
 // --- Player State (server internal) ---
 export interface PlayerState {
   id: string;

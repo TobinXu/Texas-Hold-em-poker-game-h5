@@ -91,7 +91,10 @@ async function handleAPI(request: Request, env: Env, url: URL): Promise<Response
     const roomId = wsMatch[1];
     const id = env.ROOM.idFromName(roomId);
     const stub = env.ROOM.get(id);
-    return stub.fetch(request);
+    // Rewrite path to /ws for RoomDO handler
+    const wsUrl = new URL(request.url);
+    wsUrl.pathname = '/ws';
+    return stub.fetch(new Request(wsUrl.toString(), request));
   }
 
   return new Response('Not found', { status: 404, headers: corsHeaders });

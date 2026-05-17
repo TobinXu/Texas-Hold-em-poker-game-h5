@@ -8,20 +8,11 @@ interface TableProps {
   gameState: GamePublicState | null;
 }
 
-// Custom seat positions for better mobile layout
-// 0 = bottom (my spot), 1-8 going clockwise left → top → right
-// This way you always see your seat at the bottom on mobile
-const SEAT_POSITIONS: { x: number; y: number }[] = [
-  { x: 0, y: 130 },    // 0: bottom center (my seat usually here)
-  { x: -90, y: 100 },  // 1: bottom-left
-  { x: -140, y: 50 },  // 2: left-middle
-  { x: -120, y: -30 }, // 3: top-left
-  { x: -40, y: -80 },  // 4: top-left-center
-  { x: 40, y: -80 },   // 5: top-right-center
-  { x: 120, y: -30 },  // 6: top-right
-  { x: 140, y: 50 },   // 7: right-middle
-  { x: 90, y: 100 },   // 8: bottom-right
-];
+// 6 seats on ellipse
+function seatPos(i: number) {
+  const angle = Math.PI / 2 - (i / 6) * 2 * Math.PI;
+  return { x: Math.cos(angle) * 155, y: Math.sin(angle) * 105 };
+}
 
 export default function Table({ gameState }: TableProps) {
   const myId = useGameStore(s => s.myId);
@@ -33,47 +24,61 @@ export default function Table({ gameState }: TableProps) {
   const dealerIndex = gameState?.dealerIndex ?? -1;
   const activePlayerIndex = gameState?.activePlayerIndex ?? -1;
 
-  // Reorder seats to keep my seat at bottom on mobile
-  const mySeatIndex = players.find(p => p.id === myId)?.seatIndex ?? 0;
-  const allSeats: (PlayerPublicState | null)[] = Array(9).fill(null);
+  const allSeats: (PlayerPublicState | null)[] = Array(6).fill(null);
   for (const p of players) {
-    // We already use 0-9 indices from server, just render at custom positions
-    allSeats[p.seatIndex] = p;
+    if (p.seatIndex < 6) allSeats[p.seatIndex] = p;
   }
 
   return (
-    <div className="relative w-full max-w-lg mx-auto pb-16" style={{ aspectRatio: '4/3' }}>
-      {/* Table felt background */}
-      <div className="absolute inset-0 -top-4 rounded-[50%] bg-gradient-to-br from-[#0f7037] via-[#0d5e2e] to-[#094020] border-[6px] border-amber-800/70 shadow-[0_10px_40px_rgba(0,0,0,0.5)]">
-        {/* Subtle texture overlay */}
-        <div className="absolute inset-3 rounded-[50%] border-2 border-green-300/15 bg-green-400/[0.03]" />
+    <div className="relative w-full mx-auto" style={{ maxWidth: 380, height: 300 }}>
+      {/* Table shadow */}
+      <div className="absolute inset-0 rounded-[50%]" style={{ background: 'rgba(0,0,0,0.4)', filter: 'blur(12px)', transform: 'scale(1.02)' }} />
+
+      {/* Table edge - dark grey */}
+      <div
+        className="absolute inset-0 rounded-[50%]"
+        style={{
+          background: 'linear-gradient(145deg, #3a3a3a, #2a2a2a, #333, #2a2a2a, #3a3a3a)',
+          boxShadow: '0 6px 20px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.05)',
+        }}
+      />
+      <div className="absolute inset-[5px] rounded-[50%]" style={{ background: '#222' }} />
+
+      {/* Felt */}
+      <div
+        className="absolute inset-[8px] rounded-[50%]"
+        style={{
+          background: 'radial-gradient(ellipse 75% 70% at 50% 50%, #1e8a4a 0%, #157a3a 30%, #0d5e2e 60%, #094020 100%)',
+          boxShadow: 'inset 0 0 40px rgba(0,0,0,0.3)',
+        }}
+      >
+        {/* Inner line */}
+        <div className="absolute inset-[10px] rounded-[50%] border border-white/[0.04]" />
+        <div className="absolute inset-[14px] rounded-[50%] border border-white/[0.02]" />
       </div>
 
-      {/* Community cards container */}
-      <div className="absolute left-1/2 top-[40%] -translate-x-1/2 -translate-y-1/2 z-10">
-        <div className="bg-black/30 px-4 py-2 rounded-2xl backdrop-blur-sm">
-          <div className="text-[10px] text-yellow-200/80 mb-1 text-center uppercase tracking-wide font-medium">公共牌</div>
-          <CommunityCards cards={communityCards} />
-        </div>
-      </div>
-
-      {/* Pot display */}
+      {/* Pot */}
       {pot > 0 && (
-        <div className="absolute left-1/2 top-[25%] -translate-x-1/2 z-10">
-          <div className="bg-gradient-to-r from-amber-900/80 to-amber-800/80 text-yellow-300 px-5 py-2 rounded-full shadow-lg border border-amber-600/50 backdrop-blur-sm">
-            <div className="text-sm font-bold tracking-wide">底池 ${pot}</div>
-          </div>
+        <div className="absolute left-1/2 top-[30%] -translate-x-1/2 z-10 text-center">
+          <span className="text-yellow-400 text-sm font-bold" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.6)' }}>
+            Total pot: ${pot.toLocaleString()}
+          </span>
         </div>
       )}
 
+      {/* Community cards */}
+      <div className="absolute left-1/2 top-[52%] -translate-x-1/2 -translate-y-1/2 z-10">
+        <CommunityCards cards={communityCards} />
+      </div>
+
       {/* Seats */}
       {allSeats.map((player, i) => {
-        const pos = SEAT_POSITIONS[i];
+        const pos = seatPos(i);
         return (
           <div
             key={i}
+            className="absolute z-10"
             style={{
-              position: 'absolute',
               left: `calc(50% + ${pos.x}px)`,
               top: `calc(50% + ${pos.y}px)`,
               transform: 'translate(-50%, -50%)',
@@ -81,23 +86,26 @@ export default function Table({ gameState }: TableProps) {
           >
             <Seat
               player={player}
-              isDealer={gameState ? (dealerIndex === i) : false}
-              isActive={gameState ? (activePlayerIndex === i) : false}
+              isDealer={gameState ? dealerIndex === i : false}
+              isActive={gameState ? activePlayerIndex === i : false}
               isMe={player?.id === myId}
               seatIndex={i}
-              totalSeats={9}
             />
           </div>
         );
       })}
 
-      {/* My hand - LARGE at bottom center (outside table circle) */}
+      {/* My hand + timer bar */}
       {myHand.length > 0 && (
-        <div className="absolute left-1/2 bottom-[-10px] -translate-x-1/2 z-20 bg-gradient-to-b from-black/70 to-black/80 rounded-2xl px-5 py-3 backdrop-blur-md border border-white/10 shadow-2xl">
-          <div className="text-center text-xs text-yellow-200/80 mb-2 uppercase tracking-wide font-medium">我的手牌</div>
-          <div className="flex gap-3">
+        <div className="absolute left-1/2 bottom-0 -translate-x-1/2 z-20 flex flex-col items-center"
+        >
+          {/* Timer bar */}
+          <div className="w-16 h-1 rounded-full bg-black/50 mb-1 overflow-hidden">
+            <div className="h-full bg-emerald-500 rounded-full animate-[shrink_30s_linear]" />
+          </div>
+          <div className="flex gap-1">
             {myHand.map((card, i) => (
-              <Card key={i} card={card} />
+              <Card key={i} card={card} animate />
             ))}
           </div>
         </div>

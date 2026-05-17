@@ -1,12 +1,5 @@
 @import "tailwindcss";
 
-:root {
-  --table-green: #0d5e2e;
-  --table-felt: #1a7a3a;
-  --gold: #ffd700;
-  --card-white: #f5f5f0;
-}
-
 * {
   margin: 0;
   padding: 0;
@@ -14,22 +7,45 @@
   -webkit-tap-highlight-color: transparent;
 }
 
+html, body, #root {
+  height: 100%;
+  overflow: hidden;
+}
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  overflow-x: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+  color: #fff;
   user-select: none;
   -webkit-user-select: none;
+  overscroll-behavior: none;
 }
 
 input, button {
   font-family: inherit;
 }
 
-@keyframes shrink {
-  from {
-    width: 100%;
-  }
-  to {
-    width: 0%;
-  }
+@keyframes dealCard {
+  0% { transform: translateY(-60px) scale(0.7); opacity: 0; }
+  100% { transform: translateY(0) scale(1); opacity: 1; }
+}
+
+.animate-deal { animation: dealCard 0.3s ease-out forwards; }
+
+/* Range slider */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: #222;
+  outline: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.5);
 }

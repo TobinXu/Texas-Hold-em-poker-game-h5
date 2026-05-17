@@ -12,6 +12,7 @@ import type {
   ServerMessage,
   RoomConfig,
   ShowdownResult,
+  PlayerAction,
 } from '../../shared/types';
 import { DEFAULT_CONFIG } from '../../shared/types';
 import { startHand, processAction } from './game/engine';
@@ -83,7 +84,7 @@ export class RoomDO implements DurableObject {
     // Send current state
     this.sendToPlayer(playerId, { type: 'room_state', state: this.getRoomPublicState() });
     if (this.gameState) {
-      this.sendToPlayer(playerId, { type: 'game_state', state: this.getGamePublicState() });
+      this.sendToPlayer(playerId, { type: 'game_state', state: this.getGamePublicState()! });
       // Re-send hand if game is in progress
       if (this.gameState.playerHands[playerId]) {
         this.sendToPlayer(playerId, { type: 'your_hand', cards: this.gameState.playerHands[playerId] });
@@ -399,7 +400,7 @@ export class RoomDO implements DurableObject {
 
   private broadcastGameState() {
     if (this.gameState) {
-      this.broadcast({ type: 'game_state', state: this.getGamePublicState() });
+      this.broadcast({ type: 'game_state', state: this.getGamePublicState()! });
     }
   }
 

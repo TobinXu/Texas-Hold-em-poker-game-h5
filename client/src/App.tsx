@@ -4,7 +4,7 @@ import Room from './pages/Room';
 
 export default function App() {
   return (
-    <div className="min-h-screen bg-[#1a1a2e] text-white">
+    <div className="min-h-screen text-white antialiased">
       <Routes>
         <Route path="/" element={<Lobby />} />
         <Route path="/room/:roomId" element={<Room />} />
